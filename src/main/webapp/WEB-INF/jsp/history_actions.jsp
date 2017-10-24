@@ -212,7 +212,7 @@ var	formVisible = localStorage.getItem('formActions')==='true';
 var dtosVisible = localStorage.getItem('dtObjectActions')==='true';
 var searchVisible = localStorage.getItem('searchActions')==='true';
 var summVisible = localStorage.getItem('summary')==='true';
-var catalogsVisible = localStorage.getItem('catalogsAction')==='true';
+var catalogsVisible = localStorage.getItem('getCatalogsAction')==='true';
 
 Highcharts.setOptions({
 	global: {
@@ -294,10 +294,7 @@ var myChart = Highcharts.chart('actions-chart-container', {
                             localStorage.setItem('summary', !series[7].visible);
                         }
                         if(event.target.index==8){
-                            localStorage.setItem('listActions', !series[8].visible);
-                        }
-                        if(event.target.index==9){
-                            localStorage.setItem('getCatalogsAction', !series[9].visible);
+                            localStorage.setItem('getCatalogsAction', !series[8].visible);
                         }
                     }
                 }
@@ -344,7 +341,6 @@ var myChart = Highcharts.chart('actions-chart-container', {
             data: summ,
             visible: summVisible,
             turboThreshold: 10000
-        }]
         }, {
             name: 'GetCatalogs',
             data: catalogs,
