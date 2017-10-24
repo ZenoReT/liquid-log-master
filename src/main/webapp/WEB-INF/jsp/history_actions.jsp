@@ -28,6 +28,7 @@
     Number add[]=  (Number[])request.getAttribute(Constants.PerformedActions.ADD_ACTIONS);
     Number edit[] = (Number[])request.getAttribute(Constants.PerformedActions.EDIT_ACTIONS);
     Number list[] = (Number[])request.getAttribute(Constants.PerformedActions.LIST_ACTIONS);
+    Number catalogs[] = (Number[])request.getAttribute(Constants.PerformedActions.GET_CATALOGS_ACTION);
     Number comment[] = (Number[])request.getAttribute(Constants.PerformedActions.COMMENT_ACTIONS);
     Number form[] = (Number[])request.getAttribute(Constants.PerformedActions.GET_FORM_ACTIONS);
     Number dtos[] = (Number[])request.getAttribute(Constants.PerformedActions.GET_DT_OBJECT_ACTIONS);
