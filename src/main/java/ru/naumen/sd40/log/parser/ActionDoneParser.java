@@ -36,6 +36,7 @@ public class ActionDoneParser
     private int editObjectsActions = 0;
     private int getListActions = 0;
     private int commentActions = 0;
+    private int getCatalogsAction = 0;
 
     private int getFormActions = 0;
 
@@ -68,6 +69,11 @@ public class ActionDoneParser
     public int geListActions()
     {
         return getListActions;
+    }
+    
+    public int getCatalogsAction()
+    {
+    	return getCatalogsAction;
     }
 
     public HashMap<String, Integer> getActionsCounter()
@@ -185,6 +191,10 @@ public class ActionDoneParser
             else if (actionInLowerCase.equals("editobjectaction"))
             {
                 editObjectsActions++;
+            }
+            else if (actionInLowerCase.equals("getcatalogsaction"))
+            {
+            	getCatalogsAction++;
             }
             else if (actionInLowerCase.matches("(?i)[a-zA-Z]+comment[a-zA-Z]+"))
             {
