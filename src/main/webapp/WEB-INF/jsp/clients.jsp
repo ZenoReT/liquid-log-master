@@ -72,7 +72,7 @@
 				<option value="sdng">sdng </>
 				<option value="gc">gc </>
 				<option value="top">top </>
-			</select>
+			</select><br>
         	<input type="text" name="log" size="35"><br>
         	<input type="text" name="timeParser" size="35"><br>
         	<input type="text" name="traceResult" size="35"><br>
