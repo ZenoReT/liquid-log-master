@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.List" %>
+<%@ page import="ru.naumen.sd40.log.parser.App" %>
 <html>
 
 <head>
@@ -39,6 +40,11 @@
     		$('#customForm').attr('action','/history/'+client+'/custom')
     		console.log(moment().format('zz'))
     	}
+    	
+    	function updateArguments(influxDB, mode, log, timeParser, traceResult){
+    		args = [influxDB, mode, log, timeParser, traceResult]
+    		App.main(args)
+    	}
     </script>
 <div class="container">
 	<br>
@@ -46,6 +52,39 @@
   		<h3><strong>Attention!</strong><br>All requests for stored data are made with UTC time.<br>Requested data will be displayed in your browsers timezone.</h3>
 	</div>
 	<br>
+	<h1>Form</h1>
+    <table class="table table-striped table-fixed"> <!-- table-bordered  -->
+        <thead class="thead-inverse">
+            <th class="col-xs-6">Name</th>
+            <th class="col-xs-6">Value</th>
+        </thead>
+        <tbody>
+        <td class="col-xs-6">
+        	InfluxDB<br>
+        	Parsing mode<br>
+        	Path to file<br>
+        	Time zone<br>
+        	Trace result<br>
+        </td>
+        <td class="col-xs-6">
+        	<input type="text" name="InfluxDB" size="35"><br>
+        	<select name="mode">
+				<option value="sdng">sdng </>
+				<option value="gc">gc </>
+				<option value="top">top </>
+			</select>
+        	<input type="text" name="log" size="35"><br>
+        	<input type="text" name="timeParser" size="35"><br>
+        	<input type="text" name="traceResult" size="35"><br>
+        	<button type="button" class="btn btn-success" data-toggle="arguments" data-target="#updateArguments" onclick="updateArguments(request.getParameter("table.influxDB"),
+        																															  request.getParameter("table.mode"),
+        																															  request.getParameter("table.log"),
+        																															  request.getParameter("table.timeParser"),
+        																															  request.getParameter("table.traceResult"))">Update</button>
+        </td>
+        </tbody>
+        </table>
+
     <h1>Client list</h1>
     <table class="table table-striped table-fixed"> <!-- table-bordered  -->
         <thead class="thead-inverse">
