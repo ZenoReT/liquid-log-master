@@ -1,6 +1,7 @@
 package ru.naumen.perfhouse.controllers;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 
@@ -18,9 +19,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import ru.naumen.perfhouse.influx.InfluxDAO;
+import ru.naumen.sd40.log.parser.App;
 
 /**
  * Created by dkirpichenkov on 26.10.16.
@@ -75,7 +79,7 @@ public class ClientsController
 
     @RequestMapping(path = "{client}", method = RequestMethod.POST)
     public void postClientStatFormat1(@PathVariable("client") String client, HttpServletRequest request,
-            HttpServletResponse response) throws IOException
+           			                  HttpServletResponse response) throws IOException
     {
         try
         {
@@ -91,5 +95,24 @@ public class ClientsController
             LOG.error(ex.toString(), ex);
             throw ex;
         }
+    }
+
+    @RequestMapping(path = "/", method = RequestMethod.POST)
+    public ModelAndView parsingFile(@RequestParam("nameInfluxDB") String nameInfluxDB,
+    		@RequestParam("logs") MultipartFile logs,
+    		@RequestParam("parseMode") String parseMode,
+    		@RequestParam("timeZone") String timeZone,
+    		@RequestParam(value = "traceCheckBox", required = false) boolean traceCheckBox)
+    {
+    	try 
+    	{
+    		App.parse(logs, nameInfluxDB, timeZone, parseMode, traceCheckBox, influxDAO);
+    	} 
+    	catch (ParseException | IOException e) 
+    	{
+    		e.printStackTrace();
+    		LOG.error(e.toString(), e);
+    	}
+    	return index();
     }
 }
