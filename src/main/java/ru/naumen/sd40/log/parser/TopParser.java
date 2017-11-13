@@ -16,8 +16,7 @@ import java.util.regex.Pattern;
  * @author dkolmogortsev
  *
  */
-public class TopParser
-{
+public class TopParser implements IDataParser{
 
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHH:mm");
 
@@ -45,7 +44,6 @@ public class TopParser
         this.logs = logs;
         this.existing = existingDataSet;
         sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
-
     }
 
     public void configureTimeZone(String timeZone)
@@ -65,8 +63,7 @@ public class TopParser
         }
     }
 
-    private void parseLine(String line) throws IOException, ParseException
-    {
+    public void parseLine(String line) throws ParseException{
         //check time
         long time = 0;
         Matcher matcher = timeRegex.matcher(line);

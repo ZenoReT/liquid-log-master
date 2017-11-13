@@ -10,7 +10,6 @@ import org.influxdb.dto.BatchPoints;
 
 import org.springframework.web.multipart.MultipartFile;
 import ru.naumen.perfhouse.influx.InfluxDAO;
-import ru.naumen.sd40.log.parser.GCParser.GCTimeParser;
 
 /**
  * Created by doki on 22.10.16.
@@ -36,58 +35,22 @@ public class App
         BatchPoints points = influxDAO.startBatchPoints(influxDb);
         HashMap<Long, DataSet> data = new HashMap<>();
 
-        TimeParser timeParser = new TimeParser(timeZone);
-        GCTimeParser gcTime = new GCTimeParser(timeZone);
-
         switch (parseMode)
         {
         case "sdng":
             //Parse sdng
-        	try (BufferedReader br = new BufferedReader(new InputStreamReader(logs.getInputStream())))
-            {
-                String line;
-                while ((line = br.readLine()) != null)
-                {
-                    long time = timeParser.parseLine(line);
-
-                    if (time == 0)
-                    {
-                        continue;
-                    }
-
-                    int min5 = 5 * 60 * 1000;
-                    long count = time / min5;
-                    long key = count * min5;
-
-                    data.computeIfAbsent(key, k -> new DataSet()).parseLine(line);
-                }
-            }
+        	GCParser gcParser = new GCParser();
+        	gcParser.parse(data, timeZone, logs);
             break;
         case "gc":
             //Parse gc log
-        	try (BufferedReader br = new BufferedReader(new InputStreamReader(logs.getInputStream())))
-            {
-                String line;
-                while ((line = br.readLine()) != null)
-                {
-                    long time = gcTime.parseTime(line);
-
-                    if (time == 0)
-                    {
-                        continue;
-                    }
-
-                    int min5 = 5 * 60 * 1000;
-                    long count = time / min5;
-                    long key = count * min5;
-                    data.computeIfAbsent(key, k -> new DataSet()).parseGcLine(line);
-                }
-            }
+        	TimeParser timeParser = new TimeParser();
+        	timeParser.parse(data, timeZone, logs);
             break;
         case "top":
+        	//Parse top
             TopParser topParser = new TopParser(logs, data);
             topParser.configureTimeZone(timeZone);
-            //Parse top
             topParser.parse();
             break;
         default:
