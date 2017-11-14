@@ -10,7 +10,6 @@ import org.influxdb.dto.BatchPoints;
 
 import org.springframework.web.multipart.MultipartFile;
 import ru.naumen.perfhouse.influx.InfluxDAO;
-import ru.naumen.sd40.log.parser.GCParser.GCTimeParser;
 
 /**
  * Created by doki on 22.10.16.
@@ -36,97 +35,75 @@ public class App
         BatchPoints points = influxDAO.startBatchPoints(influxDb);
         HashMap<Long, DataSet> data = new HashMap<>();
 
-        TimeParser timeParser = new TimeParser(timeZone);
-        GCTimeParser gcTime = new GCTimeParser(timeZone);
-
-        switch (parseMode)
-        {
+        IDataParser parser;
+        ITimeParser timeParser;
+        switch (parseMode){
         case "sdng":
             //Parse sdng
-        	try (BufferedReader br = new BufferedReader(new InputStreamReader(logs.getInputStream())))
-            {
-                String line;
-                while ((line = br.readLine()) != null)
-                {
-                    long time = timeParser.parseLine(line);
-
-                    if (time == 0)
-                    {
-                        continue;
-                    }
-
-                    int min5 = 5 * 60 * 1000;
-                    long count = time / min5;
-                    long key = count * min5;
-
-                    data.computeIfAbsent(key, k -> new DataSet()).parseLine(line);
-                }
-            }
+        	parser = new SDNGParser();
+        	timeParser = new SDNGTimeParser();
             break;
         case "gc":
             //Parse gc log
-        	try (BufferedReader br = new BufferedReader(new InputStreamReader(logs.getInputStream())))
-            {
-                String line;
-                while ((line = br.readLine()) != null)
-                {
-                    long time = gcTime.parseTime(line);
-
-                    if (time == 0)
-                    {
-                        continue;
-                    }
-
-                    int min5 = 5 * 60 * 1000;
-                    long count = time / min5;
-                    long key = count * min5;
-                    data.computeIfAbsent(key, k -> new DataSet()).parseGcLine(line);
-                }
-            }
+        	parser = new GCParser();
+        	timeParser = new GCTimeParser();
             break;
         case "top":
-            TopParser topParser = new TopParser(logs, data);
-            topParser.configureTimeZone(timeZone);
-            //Parse top
-            topParser.parse();
+        	//Parse top
+            parser = new TopParser();
+            timeParser = new TopTimeParser(logs, data, timeZone);
+            
             break;
         default:
             throw new IllegalArgumentException(
                     "Unknown parse mode! Availiable modes: sdng, gc, top. Requested mode: " + parseMode);
         }
+        parse(data, timeZone, logs, parser, timeParser);
 
-        if (traceCheck)
-        {
+        if (traceCheck){
             System.out.print("Timestamp;Actions;Min;Mean;Stddev;50%%;95%%;99%%;99.9%%;Max;Errors\n");
         }
-        data.forEach((k, set) ->
-        {
+        data.forEach((k, set) ->{
             ActionDoneParser dones = set.getActionsDone();
             dones.calculate();
             ErrorParser erros = set.getErrors();
-            if (traceCheck)
-            {
+            if (traceCheck){
                 System.out.print(String.format("%d;%d;%f;%f;%f;%f;%f;%f;%f;%f;%d\n", k, dones.getCount(),
                         dones.getMin(), dones.getMean(), dones.getStddev(), dones.getPercent50(), dones.getPercent95(),
                         dones.getPercent99(), dones.getPercent999(), dones.getMax(), erros.getErrorCount()));
             }
-            if (!dones.isNan())
-            {
+            if (!dones.isNan()){
                 influxDAO.storeActionsFromLog(points, influxDb, k, dones, erros);
             }
 
             GCParser gc = set.getGc();
-            if (!gc.isNan())
-            {
+            if (!gc.isNan()){
                 influxDAO.storeGc(points, influxDb, k, gc);
             }
 
             TopData cpuData = set.cpuData();
-            if (!cpuData.isNan())
-            {
+            if (!cpuData.isNan()){
                 influxDAO.storeTop(points, influxDb, k, cpuData);
             }
         });
         influxDAO.writeBatch(points);
     }
+    
+	private static void parse(HashMap<Long, DataSet> data, String timeZone,
+					   MultipartFile logs, IDataParser dataParser, ITimeParser timeParser) 
+			   throws ParseException, IOException {
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(logs.getInputStream()))){
+		String line;
+		while ((line = br.readLine()) != null){
+			long time = timeParser.parseTime(line);
+
+			if (time == 0){
+			continue;
+			}
+			
+			data.computeIfAbsent(time, k -> new DataSet());
+			dataParser.parseLine(line);
+			}
+		}
+	}
 }

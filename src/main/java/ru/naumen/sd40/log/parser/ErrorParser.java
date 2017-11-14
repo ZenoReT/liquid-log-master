@@ -5,8 +5,7 @@ import java.util.regex.Pattern;
 /**
  * Created by doki on 22.10.16.
  */
-public class ErrorParser
-{
+public class ErrorParser implements IDataParser{
     long warnCount;
     long errorCount;
     long fatalCount;
@@ -15,7 +14,7 @@ public class ErrorParser
     Pattern errorRegEx = Pattern.compile("^\\d+ \\[.+?\\] \\(.+?\\) ERROR");
     Pattern fatalRegEx = Pattern.compile("^\\d+ \\[.+?\\] \\(.+?\\) FATAL");
 
-    void parseLine(String line)
+    public void parseLine(String line)
     {
         if (warnRegEx.matcher(line).find())
         {
