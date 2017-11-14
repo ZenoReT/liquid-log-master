@@ -38,13 +38,13 @@ public class App
         switch (parseMode){
         case "sdng":
             //Parse sdng
-        	GCParser gcParser = new GCParser();
-        	parse(data, timeZone, logs, (ITimeParser)gcParser);
+        	TimeParser timeParser = new TimeParser();
+        	parse(data, timeZone, logs, (ITimeParser)timeParser);
             break;
         case "gc":
             //Parse gc log
-        	TimeParser timeParser = new TimeParser();
-        	parse(data, timeZone, logs, (ITimeParser)timeParser);
+        	GCParser gcParser = new GCParser();
+        	parse(data, timeZone, logs, (ITimeParser)gcParser);
             break;
         case "top":
         	//Parse top
