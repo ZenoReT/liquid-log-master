@@ -10,8 +10,6 @@ import org.influxdb.dto.BatchPoints;
 
 import org.springframework.web.multipart.MultipartFile;
 import ru.naumen.perfhouse.influx.InfluxDAO;
-import ru.naumen.sd40.log.parser.GCParser.GCTimeParser;
-import ru.naumen.sd40.log.parser.SDNGParser.SDNGTimeParser;
 
 /**
  * Created by doki on 22.10.16.
@@ -37,29 +35,30 @@ public class App
         BatchPoints points = influxDAO.startBatchPoints(influxDb);
         HashMap<Long, DataSet> data = new HashMap<>();
 
+        IDataParser parser;
+        ITimeParser timeParser;
         switch (parseMode){
         case "sdng":
             //Parse sdng
-        	SDNGParser sdngParser = new SDNGParser();
-        	SDNGTimeParser sdngTimeParser = new SDNGParser.SDNGTimeParser();
-        	parse(data, timeZone, logs, sdngParser, sdngTimeParser);
+        	parser = new SDNGParser();
+        	timeParser = new SDNGTimeParser();
             break;
         case "gc":
             //Parse gc log
-        	GCParser gcParser = new GCParser();
-        	GCTimeParser gcTimeParser = new GCParser.GCTimeParser();
-        	parse(data, timeZone, logs, gcParser, gcTimeParser);
+        	parser = new GCParser();
+        	timeParser = new GCTimeParser();
             break;
         case "top":
         	//Parse top
-            TopParser topParser = new TopParser(logs, data);
-            topParser.configureTimeZone(timeZone);
-            parse(data, timeZone, logs, topParser, topParser);
+            parser = new TopParser();
+            timeParser = new TopTimeParser(logs, data, timeZone);
+            
             break;
         default:
             throw new IllegalArgumentException(
                     "Unknown parse mode! Availiable modes: sdng, gc, top. Requested mode: " + parseMode);
         }
+        parse(data, timeZone, logs, parser, timeParser);
 
         if (traceCheck){
             System.out.print("Timestamp;Actions;Min;Mean;Stddev;50%%;95%%;99%%;99.9%%;Max;Errors\n");
@@ -101,7 +100,8 @@ public class App
 			if (time == 0){
 			continue;
 			}
-
+			
+			data.computeIfAbsent(time, k -> new DataSet());
 			dataParser.parseLine(line);
 			}
 		}
