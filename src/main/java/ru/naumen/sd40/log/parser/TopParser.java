@@ -100,5 +100,4 @@ public class TopParser implements IDataParser{
         long count = parsedDate / min5;
         return count * min5;
     }
-
 }
