@@ -16,10 +16,9 @@ import java.util.regex.Pattern;
  * @author dkolmogortsev
  *
  */
-public class TopParser implements IDataParser{
-
+public class TopParser implements IDataParser, ITimeParser{
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHH:mm");
-
+	
     private String dataDate;
     private MultipartFile logs;
 
@@ -29,15 +28,13 @@ public class TopParser implements IDataParser{
 
     private Pattern cpuAndMemPattren = Pattern
             .compile("^ *\\d+ \\S+ +\\S+ +\\S+ +\\S+ +\\S+ +\\S+ +\\S+ \\S+ +(\\S+) +(\\S+) +\\S+ java");
-
-    private DataSet currentSet;
-
-    public TopParser(MultipartFile logs, Map<Long, DataSet> existingDataSet) throws IllegalArgumentException
-    {
+	
+	private DataSet currentSet;
+	
+    public TopParser(MultipartFile logs, Map<Long, DataSet> existingDataSet) throws IllegalArgumentException{
         //Supports these masks in file name: YYYYmmdd, YYY-mm-dd i.e. 20161101, 2016-11-01
         Matcher matcher = Pattern.compile("\\d{8}|\\d{4}-\\d{2}-\\d{2}").matcher(logs.getOriginalFilename());
-        if (!matcher.find())
-        {
+        if (!matcher.find()){
             throw new IllegalArgumentException();
         }
         this.dataDate = matcher.group(0).replaceAll("-", "");
@@ -46,33 +43,13 @@ public class TopParser implements IDataParser{
         sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
-    public void configureTimeZone(String timeZone)
-    {
+    public void configureTimeZone(String timeZone){
         sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
     }
 
-    public void parse() throws IOException, ParseException
-    {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(logs.getInputStream())))
-        {
-            String line;
-            while ((line = br.readLine()) != null)
-            {
-                parseLine(line);
-            }
-        }
-    }
 
     public void parseLine(String line) throws ParseException{
         //check time
-        long time = 0;
-        Matcher matcher = timeRegex.matcher(line);
-        if (matcher.find())
-        {
-            time = prepareDate(sdf.parse(dataDate + matcher.group(1)).getTime());
-            currentSet = existing.computeIfAbsent(time, k -> new DataSet());
-            return;
-        }
         if (currentSet != null)
         {
             //get la
@@ -94,10 +71,20 @@ public class TopParser implements IDataParser{
         }
     }
 
-    private long prepareDate(long parsedDate)
-    {
+    private long prepareDate(long parsedDate){
         int min5 = 5 * 60 * 1000;
         long count = parsedDate / min5;
         return count * min5;
     }
+
+	public long parseTime(String line) throws ParseException {
+		long time;
+		Matcher matcher = Pattern.compile("\\d{8}|\\d{4}-\\d{2}-\\d{2}").matcher(logs.getOriginalFilename());
+        if (matcher.find()){
+            time = prepareDate(sdf.parse(dataDate + matcher.group(1)).getTime());
+            currentSet = existing.computeIfAbsent(time, k -> new DataSet());
+            return time;
+        }
+        return 0L;
+	}
 }

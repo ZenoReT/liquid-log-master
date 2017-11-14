@@ -10,6 +10,8 @@ import org.influxdb.dto.BatchPoints;
 
 import org.springframework.web.multipart.MultipartFile;
 import ru.naumen.perfhouse.influx.InfluxDAO;
+import ru.naumen.sd40.log.parser.GCParser.GCTimeParser;
+import ru.naumen.sd40.log.parser.SDNGParser.SDNGTimeParser;
 
 /**
  * Created by doki on 22.10.16.
@@ -38,19 +40,21 @@ public class App
         switch (parseMode){
         case "sdng":
             //Parse sdng
-        	TimeParser timeParser = new TimeParser();
-        	parse(data, timeZone, logs, (ITimeParser)timeParser);
+        	SDNGParser sdngParser = new SDNGParser();
+        	SDNGTimeParser sdngTimeParser = new SDNGParser.SDNGTimeParser();
+        	parse(data, timeZone, logs, sdngParser, sdngTimeParser);
             break;
         case "gc":
             //Parse gc log
         	GCParser gcParser = new GCParser();
-        	parse(data, timeZone, logs, (ITimeParser)gcParser);
+        	GCTimeParser gcTimeParser = new GCParser.GCTimeParser();
+        	parse(data, timeZone, logs, gcParser, gcTimeParser);
             break;
         case "top":
         	//Parse top
             TopParser topParser = new TopParser(logs, data);
             topParser.configureTimeZone(timeZone);
-            topParser.parse();
+            parse(data, timeZone, logs, topParser, topParser);
             break;
         default:
             throw new IllegalArgumentException(
@@ -87,22 +91,18 @@ public class App
     }
     
 	private static void parse(HashMap<Long, DataSet> data, String timeZone,
-					   MultipartFile logs, ITimeParser parser) 
+					   MultipartFile logs, IDataParser dataParser, ITimeParser timeParser) 
 			   throws ParseException, IOException {
 		try (BufferedReader br = new BufferedReader(new InputStreamReader(logs.getInputStream()))){
 		String line;
 		while ((line = br.readLine()) != null){
-			long time = parser.parseTime(line);
+			long time = timeParser.parseTime(line);
 
 			if (time == 0){
 			continue;
 			}
-			
-			int min5 = 5 * 60 * 1000;
-			long count = time / min5;
-			long key = count * min5;
-			
-			data.computeIfAbsent(key, k -> new DataSet()).parseLine(line);
+
+			dataParser.parseLine(line);
 			}
 		}
 	}

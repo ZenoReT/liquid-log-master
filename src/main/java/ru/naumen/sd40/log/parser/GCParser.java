@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
-public class GCParser{
+public class GCParser implements IDataParser{
     public final static class GCTimeParser implements ITimeParser{
         private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ",
                 new Locale("ru", "RU"));
@@ -21,21 +21,17 @@ public class GCParser{
         private static final Pattern PATTERN = Pattern
                 .compile("^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}\\+\\d{4}).*");
 
-        public GCTimeParser()
-        {
+        public GCTimeParser(){
             DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
         }
 
-        public GCTimeParser(String timeZone)
-        {
+        public GCTimeParser(String timeZone){
             DATE_FORMAT.setTimeZone(TimeZone.getTimeZone(timeZone));
         }
         
-        public long parseTime(String line) throws ParseException
-        {
+        public long parseTime(String line) throws ParseException{
             Matcher matcher = PATTERN.matcher(line);
-            if (matcher.find())
-            {
+            if (matcher.find()){
                 Date parse = DATE_FORMAT.parse(matcher.group(1));
                 return parse.getTime();
             }
@@ -47,31 +43,25 @@ public class GCParser{
 
     private Pattern gcExecutionTime = Pattern.compile(".*real=(.*)secs.*");
 
-    public double getCalculatedAvg()
-    {
+    public double getCalculatedAvg(){
         return roundToTwoPlaces(getSafeDouble(ds.getMean()));
     }
 
-    public long getGcTimes()
-    {
+    public long getGcTimes() {
         return ds.getN();
     }
 
-    public double getMaxGcTime()
-    {
+    public double getMaxGcTime(){
         return roundToTwoPlaces(getSafeDouble(ds.getMax()));
     }
 
-    public boolean isNan()
-    {
+    public boolean isNan(){
         return getGcTimes() == 0;
     }
 
-    public void parseLine(String line)
-    {
+    public void parseLine(String line){
         Matcher matcher = gcExecutionTime.matcher(line);
-        if (matcher.find())
-        {
+        if (matcher.find()){
             ds.addValue(Double.parseDouble(matcher.group(1).trim().replace(',', '.')));
         }
     }
